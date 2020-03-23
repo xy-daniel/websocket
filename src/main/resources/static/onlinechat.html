@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>群聊</title>
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+</head>
+<body>
+    <input type="button" id="connect" value="连接"/>
+    <input type="button" id="disconnect" disabled="disabled" value="断开"/>
+    <br/>
+    <div id="chat" style="display: none">
+        消息内容：<label for="content"><input type="text" id="content"/></label>
+        目标用户：<label for="to"><input type="text" id="to"></label>
+        <input type="button" id="send" value="发送">
+        <div id="conversation">点对点发送测试...</div>
+    </div>
+    <script>
+        $(function () {
+            $("#connect").click(function () {
+                connect();
+            });
+            $("#disconnect").click(function () {
+                if (stompClient!=null){
+                    stompClient.disconnect();
+                }
+                setConnected(false);
+            });
+            $("#send").click(function () {
+                stompClient.send("/app/chat", {}, JSON.stringify({
+                    "to" : $("#to").val(),
+                    "content" : $("#content").val()
+                }))
+            })
+        });
+        let stompClient = null;
+
+        function connect() {
+            const socket = new SockJS("/chat");
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (successCallback) {
+                setConnected(true);
+                stompClient.subscribe("/user/queue/chat", function (msg) {
+                    showGreeting(JSON.parse(msg.body));
+                })
+            })
+        }
+
+        function setConnected(flag) {
+            $("#connect").prop("disabled", flag);
+            $("#disconnect").prop("disabled", !flag);
+            if (flag) {
+                $("#chat").show()
+            } else {
+                $("#chat").hide()
+            }
+        }
+
+        function showGreeting(msg) {
+            //展示消息
+            $("#conversation").append("<div>" + msg.from + ":" + msg.content + "</div>")
+        }
+    </script>
+</body>
+</html>
