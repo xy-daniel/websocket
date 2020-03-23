@@ -1,2 +1,3 @@
-# websocket-1
-SpringBoot第十一章即时通信———websocket订阅群发
+# websocket
+基于springboot的简易多人聊天室
+基于springboot的点对点单人聊天室
